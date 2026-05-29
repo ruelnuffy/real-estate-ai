@@ -4,7 +4,6 @@ import {
   Settings as SettingsIcon, 
   Search, 
   Send, 
-  Menu,
   Sparkles,
   Building,
   User,
@@ -46,6 +45,8 @@ interface UserPreferences {
   tone: 'simple' | 'pro';
   preferredArea: string;
 }
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+const apiUrl = (path: string) => `${API_BASE_URL}${path}`;
 
 const PropertyCard = ({ property, onDetails }: { property: PropertyData, onDetails: (title: string) => void }) => {
   return (
@@ -120,7 +121,7 @@ function App() {
 
   const fetchConversations = async () => {
     try {
-      const response = await fetch('http://localhost:8002/api/conversations');
+      const response = await fetch(apiUrl('/api/conversations'));
       const data = await response.json();
       setConversations(data);
     } catch (error) {
@@ -149,7 +150,7 @@ function App() {
 
   const loadConversation = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8002/api/conversations/${id}`);
+      const response = await fetch(apiUrl(`/api/conversations/${id}`));
       const data = await response.json();
       setCurrentConversationId(data.id);
       setMessages(data.messages.map((m: any) => ({
@@ -178,7 +179,7 @@ function App() {
     }, 1200);
 
     try {
-      const response = await fetch('http://localhost:8002/api/chat', {
+      const response = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
