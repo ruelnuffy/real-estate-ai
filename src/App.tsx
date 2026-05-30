@@ -39,6 +39,18 @@ interface PropertyData {
   features: string;
 }
 
+interface TextPart {
+  type: 'text';
+  value: string;
+}
+
+interface PropertyPart {
+  type: 'property';
+  value: PropertyData;
+}
+
+type ContentPart = TextPart | PropertyPart;
+
 interface UserPreferences {
   maxPrice: number;
   currency: 'NGN' | 'USD';
@@ -211,9 +223,9 @@ function App() {
     }
   };
 
-  const parseContent = (content: string) => {
+  const parseContent = (content: string): ContentPart[] => {
     const propertyRegex = /PROPERTY_START([\s\S]*?)PROPERTY_END/g;
-    const parts = [];
+    const parts: ContentPart[] = [];
     let lastIndex = 0;
     let match;
 
@@ -227,10 +239,20 @@ function App() {
         const [key, ...val] = line.split(':');
         if (key && val) propData[key.trim().toLowerCase()] = val.join(':').trim();
       });
-      parts.push({ type: 'property', value: propData });
+      parts.push({
+        type: 'property',
+        value: {
+          title: propData.title ?? '',
+          location: propData.location ?? '',
+          price: propData.price ?? '',
+          features: propData.features ?? ''
+        }
+      });
       lastIndex = propertyRegex.lastIndex;
     }
-    if (lastIndex < content.length) parts.push({ type: 'text', value: content.substring(lastIndex) });
+    if (lastIndex < content.length) {
+      parts.push({ type: 'text', value: content.substring(lastIndex) });
+    }
     return parts.length === 0 ? [{ type: 'text', value: content }] : parts;
   };
 
@@ -445,7 +467,11 @@ function App() {
                 <div className={`max-w-[90%] md:max-w-[80%] p-6 rounded-[2rem] ${msg.role === 'user' ? 'bg-textMain text-background shadow-2xl font-bold' : 'bg-surface text-textMain shadow-inner font-medium'}`}>
                   <div className="space-y-4">
                     {parseContent(msg.content).map((part, i) => (
-                      part.type === 'property' ? <PropertyCard key={i} property={part.value as PropertyData} onDetails={(title) => handleSend(`Tell me more about ${title}`)} /> : <p key={i} className="text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap">{part.value as string}</p>
+                      part.type === 'property' ? (
+                        <PropertyCard key={i} property={part.value} onDetails={(title) => handleSend(`Tell me more about ${title}`)} />
+                      ) : (
+                        <p key={i} className="text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap">{part.value}</p>
+                      )
                     ))}
                   </div>
                   <div className={`flex items-center gap-2 mt-5 opacity-30 text-[9px] font-black uppercase tracking-[0.3em] ${msg.role === 'user' ? 'text-background' : 'text-textMuted'}`}>
