@@ -153,7 +153,7 @@ function App() {
       const response = await fetch(apiUrl(`/api/conversations/${id}`));
       const data = await response.json();
       setCurrentConversationId(data.id);
-      setMessages(data.messages.map((m: any) => ({
+      setMessages(data.messages.map((m: { role: 'user' | 'assistant'; content: string; timestamp: string }) => ({
         role: m.role,
         content: m.content,
         timestamp: new Date(m.timestamp)
@@ -200,7 +200,7 @@ function App() {
         setCurrentConversationId(data.conversation_id);
         fetchConversations();
       }
-    } catch (error) {
+    } catch {
       clearInterval(interval);
       setIsTyping(false);
       setMessages(prev => [...prev, { 
@@ -222,7 +222,7 @@ function App() {
         parts.push({ type: 'text', value: content.substring(lastIndex, match.index) });
       }
       const propLines = match[1].trim().split('\n');
-      const propData: any = {};
+      const propData: Record<string, string> = {};
       propLines.forEach(line => {
         const [key, ...val] = line.split(':');
         if (key && val) propData[key.trim().toLowerCase()] = val.join(':').trim();

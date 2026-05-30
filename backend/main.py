@@ -32,6 +32,20 @@ app.add_middleware(
 # Initialize database
 models.Base.metadata.create_all(bind=database.engine)
 
+# Auto-seed database if empty (ensures properties exist on fresh cloud databases)
+from .database import SessionLocal
+from .models import Property
+db = SessionLocal()
+try:
+    if db.query(Property).count() == 0:
+        logger.info("Database is empty. Triggering automated seeding of properties...")
+        from .seed import seed_data
+        seed_data()
+except Exception as e:
+    logger.error(f"Error checking/seeding properties: {e}")
+finally:
+    db.close()
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[int] = None
